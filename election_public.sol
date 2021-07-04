@@ -1,73 +1,68 @@
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.4;
 
 
 contract Election {
     
-       string public nomelection=" Kinshasa Election edition 2022";
-       address admin;
-       uint public nombreDgensQuiontVote;
-       uint public nombreDecandidats;
-       constructor(){
-           
-           admin=msg.sender;
-         
-       }
-       
-       struct Candidat {
-           
-           string nom;
-           string pnom;
-           uint nombreDeVoix;
-           
-       }
-       
-       struct Processus {
-           
-           bool dejaVote;
-           bool autorise;
-           uint  choixDelecteur;
-           
-       }
-       
-       Candidat[]public candidats;
-       mapping(address=>Processus)public electeurs;
-       event AdressAutorise(address indexed administreur,address indexed autorisee);
-       event AjouterCand(address indexed administreur,string nomCandidat, string pnomCandidat, uint voix);
-       event VoteProcessus(address indexed electeur, uint choixFait);
-       modifier adminAuto(){
-           require(msg.sender==admin,"tu n'es pas l'admin");
-           _;
-       }
-       
-       
-       function ajouterCandidat(string memory _nom,string memory _pnom)public adminAuto {
-           
-           candidats.push(Candidat(_nom,_pnom,0));
-           candidats.push(Candidat(_nom,_pnom,0));
-           emit AjouterCand(msg.sender,_nom,_pnom,0);
-           nombreDecandidats++;
-           
-       }
-       
-       function autorisationDvote(address _add)public adminAuto{
-           
-           electeurs[_add].autorise=true;
-           emit AdressAutorise(msg.sender,_add);
-       }
-      
-       
-       function voter(uint _choixDelecteur)public {
-           require(electeurs[msg.sender].dejaVote==false,"tu as deja vote");
-           require(electeurs[msg.sender].autorise==true,"tu n'es autorise de voter");
-           electeurs[msg.sender].choixDelecteur=_choixDelecteur;
-           electeurs[msg.sender].dejaVote=true;
-           candidats[_choixDelecteur].nombreDeVoix++;
-           nombreDgensQuiontVote++;
-            emit VoteProcessus(msg.sender,_choixDelecteur);
-           
-       }
     
     
+    address public admin;
+    uint public id;
+    uint public nombreDeVote;
+    constructor(){
+        
+        admin=msg.sender;
+    }
+    
+    
+        //structuurer le candidat
+        
+        struct CANDIDAT {
+            
+            uint idcandidat;
+            string nom;
+            uint nbreVoix;
+        }
+        
+        struct ELECTEUR {
+            
+            bool permit;
+            bool djaVote;
+            uint choix;
+            
+        }
+        
+        mapping(uint=>CANDIDAT)public candidats;
+        mapping(address=>ELECTEUR)public electeurs;
+        event Enregistrer(address indexed admin,string nom);
+        event Autorisation(address indexed admin, address indexed electeur);
+        event Vote(address indexed electeur,uint choix);
+        function enregisterCandidat(string memory _nom)public {
+            
+            require(msg.sender==admin,"tu n'es pas admin");
+            id+=1;
+            candidats[id]=CANDIDAT(id,_nom,0);
+            emit Enregistrer(msg.sender,_nom);
+        }
+        
+        
+        function autorisation(address _electeur)public {
+            require(msg.sender==admin,"tu n'es ps admin");
+            electeurs[_electeur].permit=true;
+            emit Autorisation(msg.sender,_electeur);
+            
+        }
+    
+      function voter(uint _choix)public {
+          require(msg.sender !=admin,"tu es admin ");
+          require(electeurs[msg.sender].djaVote==false,"tu as dja vote");
+          require(electeurs[msg.sender].permit==true,"tu n'es parmi electeurs");
+          electeurs[msg.sender].choix=_choix;
+          electeurs[msg.sender].djaVote==true;
+          candidats[_choix].nbreVoix +=1;
+          nombreDeVote+=1;
+          emit Vote(msg.sender,_choix);
+          
+      }
     
     
     
